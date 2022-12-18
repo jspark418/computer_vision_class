@@ -33,9 +33,14 @@ from data.celeba import CelebA
 from data.cifar import CIFAROOD
 from data.dogvscat import DogVsCatOOD
 from data.fmnist import FashionMNISTOOD
-from model import resnet as model
+# from model import resnet as model
+from model import efficientnet as model
 import util.metric as util_metric
 from util.scheduler import CustomLearningRateSchedule as CustomSchedule
+# import tensorflow_models as tfm
+from optimizer.adamp_tf import AdamP
+from optimizer.sgdp_tf import SGDP
+from optimizer.lars import LARS
 
 _SUPPORTED_DATASET = frozenset([
     'cifar10ood', 'cifar20ood', 'cifar100ood', 'fashion_mnistood', 'fmnistood',
@@ -135,12 +140,29 @@ class BaseTrain(object):
     # Data loader.
     self.get_dataloader()
     # Model architecture.
-    self.model = self.get_model(
-        arch=self.net_type,
-        width=self.net_width,
-        head_dims=self.head_dims,
+    # self.model = self.get_model(
+    #     arch=self.net_type,
+    #     width=self.net_width,
+    #     head_dims=self.head_dims,
+    #     input_shape=self.input_shape,
+    #     num_class=self.latent_dim)
+    # model architecture (efficientnet)
+    # def get_model(arch='ResNet18',
+  #               width=1.0,
+  #               head_dims=None,
+  #               input_shape=(256, 256, 3),
+  #               num_class=2)
+    self.model = model.EfficientNetB0(head_dims=self.head_dims,
         input_shape=self.input_shape,
         num_class=self.latent_dim)
+    # self.model = tf.keras.applications.efficientnet.EfficientNetB0(
+    # include_top=False,
+    # weights=None,
+    # input_tensor=None,
+    # input_shape=(32,32,3),
+    # pooling=None,
+    # classes=1000,
+    # classifier_activation='relu')
     # Scheduler.
     self.scheduler, self.sched_name = self.get_scheduler(
         sched_type=self.sched_type,
@@ -232,19 +254,20 @@ class BaseTrain(object):
     return dl
 
   @staticmethod
-  def get_model(arch='ResNet18',
-                width=1.0,
-                head_dims=None,
-                input_shape=(256, 256, 3),
-                num_class=2):
-    """Gets the ResNet model."""
-    net = model.__dict__[arch](
-        width=width,
-        head_dims=head_dims,
-        input_shape=input_shape,
-        num_class=num_class)
-    net.summary()
-    return net
+  # def get_model(arch='ResNet18',
+  #               width=1.0,
+  #               head_dims=None,
+  #               input_shape=(256, 256, 3),
+  #               num_class=2):
+  #   """Gets the ResNet model."""
+  #   net = model.__dict__[arch](
+  #       width=width,
+  #       head_dims=head_dims,
+  #       input_shape=input_shape,
+  #       num_class=num_class)
+  #   net.summary()
+  #   return net
+
 
   @staticmethod
   def get_optimizer(scheduler, optim_type='sgd', learning_rate=0.03, **kwargs):
@@ -260,7 +283,20 @@ class BaseTrain(object):
     elif optim_type == 'adam':
       optimizer = tf.keras.optimizers.Adam(
           learning_rate=scheduler, amsgrad=True)
-      name = 'adam_lr{:g}'.format(learning_rate)
+      name = 'adam_lr{:g}'.format(learning_rate)       
+    elif optim_type == 'lars':
+      optimizer = LARS(learning_rate=scheduler, momentum=0.9, nesterov=False)
+      name = 'lars_lr{:g}'.format(learning_rate)
+    elif optim_type == 'sgdp':
+        optimizer = SGDP(learning_rate=scheduler, momentum=0.9, nesterov=False)
+        name = 'sgdp_lr{:g}'.format(learning_rate)
+    elif optim_type == 'adamp':
+        optimizer = AdamP(learning_rate=scheduler)
+        name = 'adamp_lr{:g}'.format(learning_rate)
+    # elif optim_type == 'sgdw':
+    #     wd = lambda: 1e-4 * scheduler
+    #     optimizer = tfa.optimizers.SGDW(weight_decay = wd, learning_rate=scheduler, momentum=0.9, nesterov=False)
+    #     name = 'sgdw_lr{:g}'.format(learning_rate)
     else:
       raise NotImplementedError
     return optimizer, name
@@ -287,7 +323,7 @@ class BaseTrain(object):
     else:
       self.file_path = os.path.join(
           self.ckpt_prefix, '{}_seed{}'.format(self.db_name, self.seed),
-          self.model.name, '{}_{}_{}_wd{:g}_{}_epoch{}_nb{}_bs{}'.format(
+          'efficientnetb0', '{}_{}_{}_wd{:g}_{}_epoch{}_nb{}_bs{}'.format(
               self.__class__.__name__, self.optim_name, self.sched_name,
               self.weight_decay, '_'.join(self.weight_decay_constraint),
               self.num_epoch, self.num_batch, self.batch_size))

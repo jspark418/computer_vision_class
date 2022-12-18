@@ -1,52 +1,12 @@
-# Deep Representation One-class Classification (DROC).
+1. 아래논문 및 github 코드 사용
+- 논문 : Learning and Evaluating Representations for Deep One-Class Classification(https://arxiv.org/pdf/2011.02578.pdf)
+- github 주소 : https://github.com/google-research/deep_representation_one_class
 
-**This is not an officially supported Google product.**
+2. 사용 방법
+- run_contrastive_da.sh 에서 하이퍼파라미터 설정 후 command 창에서 sh run_contrastive_da.sh 입력
+- 결과 폴더 생성되어 저장됨
 
-Tensorflow 2 implementation of the paper: 
-[Learning and Evaluating Representations for Deep One-class Classification](https://openreview.net/forum?id=HCSgyPUfeDj) 
-published at [ICLR 2021](https://iclr.cc/) as a conference paper
-by Kihyuk Sohn, Chun-Liang Li, Jinsung Yoon, Minho Jin, and Tomas Pfister.
+3. 개선사항
+- optimizer 추가 : 사용 가능 optimizer [SGD(기본), SGDP, Adam, AdamP, LARS]
+- model 추가 중 : 기본 모델 Resnet, EfficientNet 추가 중 
 
-This directory contains a two-stage framework for deep one-class classification
-example, which includes the self-supervised deep representation learning from
-one-class data, and a classifier using generative or discriminative models.
-
-## Install
-
-The `requirements.txt` includes all the dependencies for this project, and an
-example of install and run the project is given in run.sh.
-
-```bash
-$sh deep_representation_one_class/run.sh
-```
-
-## Download datasets
-
-`script/prepare_data.sh` includes an instruction how to prepare data for
-CatVsDog and CelebA datasets. For CatVsDog dataset, the data needs to be
-downloaded manually. Please uncomment line 2 to set `DATA_DIR` to download
-datasets before starting it.
-
-## Run
-
-The options for the experiments are specified thru the command line arguments.
-The detailed explanation can be found in `train_and_eval_loop.py`. Scripts for
-running experiments can be found
-
--   Rotation prediction: `script/run_rotation.sh`
-
--   Contrastive learning: `script/run_contrastive.sh`
-
--   Contrastive learning with distribution augmentation:
-    `script/run_contrastive_da.sh`
-
-## Evaluation
-
-After running `train_and_eval_loop.py`, the evaluation results can be found in
-`$MODEL_DIR/stats/summary.json`, where `MODEL_DIR` is specified as model_dir of
-`train_and_eval_loop.py`.
-
-## Contacts
-
-kihyuks@google.com, chunliang@google.com, jinsungyoon@google.com,
-minhojin@google.com, tpfister@google.com
